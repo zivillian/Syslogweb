@@ -1,0 +1,28 @@
+﻿@model SyslogWeb.Models.MongoResultRow
+
+<tr class="@Model.CssClass">
+    <td>@Html.Raw(Model.Date.LocalDateTime.ToString().Replace(" ", "&nbsp;"))</td>
+    <td style="white-space: nowrap;">
+        @if (!Model.HostAsLink)
+        {
+            @Model.Host
+        }
+        else
+        {
+            @Html.ActionLink(Model.Host, "Index", "Home", new {Search = String.Format("{0} host:{1}", Model.Query, Model.Host), Date = Model.QueryDate.HasValue?Model.QueryDate.ToString():String.Empty}, null)
+        }
+    </td>
+    <td>@Model.Severity</td>
+    <td>@Model.Facility</td>
+    <td>
+        @if (!Model.ProgramAsLink)
+        {
+            @Model.Program
+        }
+        else
+        {
+            @Html.ActionLink(Model.Program, "Index", "Home", new {Search = String.Format("{0} program:{1}", Model.Query, Model.Program), Date = Model.QueryDate.HasValue?Model.QueryDate.ToString():String.Empty}, null)
+        }
+    </td>
+    <td>@Model.Text</td>
+</tr>

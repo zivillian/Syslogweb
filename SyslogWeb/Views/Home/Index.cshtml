@@ -1,0 +1,136 @@
+﻿@using SyslogWeb.Models
+@using SyslogWeb.Extensions
+@model MongoResultModel
+@{
+    ViewBag.Title = "Syslog";
+}
+@if (Html.IsDebug()) { 
+@section footer
+{
+    <div class="panel-group" id="accordion">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h3 class="panel-title">
+                    <a data-toggle="collapse" data-parent="#accordion" href="#collapseOne">Json Query</a>
+                </h3>
+            </div>
+            <div id="collapseOne" class="panel-collapse collapse">
+                <div class="panel-body">
+                    <pre class="prettyprint">@Model.QueryJson</pre>
+                </div>
+            </div>
+        </div>
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h4 class="panel-title">
+                    <a data-toggle="collapse" data-parent="#accordion" href="#collapseThree">Stats</a>
+                </h4>
+            </div>
+            <div id="collapseThree" class="panel-collapse collapse">
+                <div class="panel-body">
+                    <p>Parse: @Model.ParseTime ms</p>
+                    <p>Count: @Model.CountTime ms</p>
+                    <p>Fetch: @Model.FetchTime ms</p>
+                    <p>Render: @Model.RenderTime.ElapsedMilliseconds ms</p>
+                    @{ Model.RenderTime.Stop(); }
+                </div>
+            </div>
+        </div>
+    </div>
+}}
+
+<h2>@ViewBag.Title</h2>
+<form method="GET" action="@Url.Action("Index")" id="searchform" data-wsport="@SyslogWeb.Properties.Settings.Default.WebsocketPort" data-id="@Model.ObjectId" data-query="@Model.Query">
+    <span class="row">
+        <span class="input-group col-md-9">
+            <span class="input-group-btn">
+                <button class="btn btn-default" type="button" id="pause">
+                    <span class="glyphicon glyphicon-pause"></span>
+                </button>
+            </span>
+            <input id="searchinput" class="form-control" type="text" placeholder="Suche..." value="@Model.Query" name="search" autocomplete="off"/>
+            <span class="input-group-btn">
+                <button class="btn btn-default" type="submit">
+                    <span class="glyphicon glyphicon-search"></span>
+                </button>
+            </span>
+        </span>
+        <span class="input-group col-md-3 date">
+            <input class="form-control" type="text" placeholder="max. Datum" value="@Model.Date" name="date" autocomplete="off"/>
+            <span class="input-group-btn">
+                <button class="btn btn-default datepickerbutton" type="button">
+                    <span class="glyphicon glyphicon-calendar"></span>
+                </button>
+            </span>
+        </span>
+    </span>
+</form>
+<table class="table">
+    <thead>
+        <tr>
+            <th>Datum</th>
+            <th>Host</th>
+            <th>
+                <span class="btn-group" style="white-space: nowrap;" id="severityform">
+                    <span class="dropdown-toggle" data-toggle="dropdown">Severity&nbsp;<span class="caret"></span>
+                    </span>
+                    <ul class="dropdown-menu dropdown-menu-form" role="menu">
+                        @foreach (var value in Enum.GetValues(typeof(SyslogSeverity)).OfType<SyslogSeverity>().Where(x => x >= 0).OrderBy(x => x))
+                        {
+                            <li>
+                                <label class="checkbox">
+                                    @if (Model.SelectedSeverities.Contains(value))
+                                    {
+                                        <input type="checkbox" checked="checked" value="@value.ToString()"/>
+                                    }
+                                    else
+                                    {
+                                        <input type="checkbox" value="@value.ToString()"/>
+                                    }
+                                    @value.ToString()
+                                </label>
+                            </li>
+                        }
+                    </ul>
+                </span>
+            </th>
+            <th>
+                <span class="btn-group" style="white-space: nowrap;" id="facilityform">
+                    <span class="dropdown-toggle" data-toggle="dropdown">Facility&nbsp;<span class="caret"></span>
+                    </span>
+                    <ul class="dropdown-menu dropdown-menu-form" role="menu">
+                        @foreach (var value in Enum.GetValues(typeof(SyslogFacility)).OfType<SyslogFacility>().OrderBy(x => x.ToString()))
+                        {
+                            <li>
+                                <label class="checkbox">
+                                    @if (Model.SelectedFacilities.Contains(value))
+                                    {
+                                        <input type="checkbox" checked="checked" value="@value.ToString()"/>
+                                    }
+                                    else
+                                    {
+                                        <input type="checkbox" value="@value.ToString()"/>
+                                    }
+                                    @value.ToString()
+                                </label>
+                            </li>
+                        }
+                    </ul>
+                </span>
+            </th>
+            <th>Program</th>
+            <th>Text</th>
+        </tr>
+
+    </thead>
+    <tbody>
+        @foreach (var entry in Model.LogEntryModels)
+        {
+            @Html.Partial("PartialRow", entry);
+        }
+    </tbody>
+</table>
+@if (Model.MinDate.HasValue)
+{
+    @Html.ActionLink("Next", "Index", "Home", new { Search = Model.Query, Date = Model.MinDate.ToString() }, null);
+}
