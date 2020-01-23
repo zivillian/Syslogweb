@@ -50,7 +50,7 @@ function StartWebsocket() {
     var $form = $('#searchform');
     var port = $form.attr('data-wsport');
     var id = $form.attr('data-id');
-    if (id == '000000000000000000000000') return;
+    if (id === '000000000000000000000000') return;
     var connection = new WebSocket('ws://' + window.location.hostname + ':' + port + '/syslog');
     var $table = $('table.table > tbody');
     

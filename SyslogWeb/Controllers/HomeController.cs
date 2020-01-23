@@ -21,48 +21,48 @@ namespace SyslogWeb.Controllers
 
         public ActionResult Index([DefaultValue(null)]string search, string date)
         {
-	        DateTime parsed;
+        DateTime parsed;
 
-			var coll = _mongoDb.SyslogCollection;
+            var coll = _mongoDb.SyslogCollection;
 
-			var model = new MongoResultModel();
-			if (DateTime.TryParse(date, out parsed))
-			{
-				model.Date = parsed;
-			}
-			var sw = new Stopwatch();
-			sw.Start();
-			var query = QueryParser.Parse(search, model);
-			sw.Stop();
-	        model.ParseTime = sw.ElapsedMilliseconds;
-			var cursor = coll.Find(query);
-			cursor.Sort(new SortDefinitionBuilder<SyslogEntry>().Descending(x=>x.Id));
-	        var result = cursor;
+            var model = new MongoResultModel();
+            if (DateTime.TryParse(date, out parsed))
+            {
+                model.Date = parsed;
+            }
+            var sw = new Stopwatch();
+            sw.Start();
+            var query = QueryParser.Parse(search, model);
+            sw.Stop();
+        model.ParseTime = sw.ElapsedMilliseconds;
+            var cursor = coll.Find(query);
+            cursor.Sort(new SortDefinitionBuilder<SyslogEntry>().Descending(x=>x.Id));
+        var result = cursor;
 
-			sw.Restart();
-			model.LogEntries = result.Limit(100).ToList();
-			sw.Stop();
-			model.FetchTime = sw.ElapsedMilliseconds;
+            sw.Restart();
+            model.LogEntries = result.Limit(100).ToList();
+            sw.Stop();
+            model.FetchTime = sw.ElapsedMilliseconds;
 
-			sw.Restart();
-			model.Total = result.Count();
-			sw.Stop();
-			model.CountTime = sw.ElapsedMilliseconds;
-			
-			if (query != null)
-			{
-				var jsonSettings = new JsonWriterSettings
-				{
-					Indent = true,
-					OutputMode = JsonOutputMode.Strict
-				};
+            sw.Restart();
+            model.Total = result.Count();
+            sw.Stop();
+            model.CountTime = sw.ElapsedMilliseconds;
+            
+            if (query != null)
+            {
+                var jsonSettings = new JsonWriterSettings
+                {
+                    Indent = true,
+                    OutputMode = JsonOutputMode.Strict
+                };
 
-				model.QueryJson = query.Render(BsonSerializer.SerializerRegistry.GetSerializer<SyslogEntry>(), BsonSerializer.SerializerRegistry).ToJson(jsonSettings);
-			}
+                model.QueryJson = query.Render(BsonSerializer.SerializerRegistry.GetSerializer<SyslogEntry>(), BsonSerializer.SerializerRegistry).ToJson(jsonSettings);
+            }
 
-	        model.RenderTime = sw;
-			sw.Restart();
-			return View(model);
+        model.RenderTime = sw;
+            sw.Restart();
+            return View(model);
         }
     }
 }
