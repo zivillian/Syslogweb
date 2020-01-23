@@ -33,6 +33,10 @@ body > .container {
   margin: 20px 0;
 }
 
+tr > td:last-of-type {
+    word-break: break-word;
+}
+
 .footer > .container {
   padding-right: 15px;
   padding-left: 15px;

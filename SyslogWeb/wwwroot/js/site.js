@@ -87,11 +87,11 @@ function StartWebsocket() {
 
     $('#pause').on('click', function () {
         var $span = $(this).find('span');
-        if ($span.hasClass('glyphicon-pause')) {
-            $span.removeClass('glyphicon-pause').addClass('glyphicon-play');
+        if ($span.hasClass('fa-pause')) {
+            $span.removeClass('fa-pause').addClass('fa-play');
             connection.send('pause');
         } else {
-            $span.removeClass('glyphicon-play').addClass('glyphicon-pause');
+            $span.removeClass('fa-play').addClass('fa-pause');
             connection.send('resume');
         }
     });

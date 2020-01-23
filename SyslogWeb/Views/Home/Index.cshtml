@@ -42,35 +42,31 @@
 <h2>@ViewBag.Title</h2>
 <form method="GET" action="@Url.Action("Index")" id="searchform" data-wsport="9000" data-id="@Model.ObjectId" data-query="@Model.Query">
     <span class="row">
-        <span class="input-group col-md-9">
-            <span class="input-group-btn">
-                <button class="btn btn-default" type="button" id="pause">
-                    <span class="glyphicon glyphicon-pause"></span>
+        <div class="input-group col-md-9">
+            <div class="input-group-prepend">
+                <button class="btn btn-outline-secondary" type="button" id="pause">
+                    <span class="fas fa-pause"></span>
                 </button>
-            </span>
-            <input id="searchinput" class="form-control" type="text" placeholder="Suche..." value="@Model.Query" name="search" autocomplete="off"/>
-            <span class="input-group-btn">
-                <button class="btn btn-default" type="submit">
-                    <span class="glyphicon glyphicon-search"></span>
+            </div>
+            <input id="searchinput" class="form-control" type="text" placeholder="Suche..." value="@Model.Query" name="search" autocomplete="off" />
+            <div class="input-group-append">
+                <button class="btn btn-outline-secondary" type="submit">
+                    <span class="fas fa-search"></span>
                 </button>
-            </span>
-        </span>
+            </div>
+        </div>
         <span class="input-group col-md-3 date">
-            <input class="form-control" type="datetime" placeholder="max. Datum" value="@Model.Date" name="date" autocomplete="off"/>
-            <span class="input-group-btn">
-                <button class="btn btn-default datepickerbutton" type="button">
-                    <span class="glyphicon glyphicon-calendar"></span>
-                </button>
-            </span>
+            <input class="form-control" type="datetime-local" placeholder="max. Datum" value="@Model.Date" name="date" autocomplete="off" />
         </span>
     </span>
+    
 </form>
-<table class="table">
+<table class="table table-sm">
     <thead>
         <tr>
-            <th>Datum</th>
-            <th>Host</th>
-            <th>
+            <th scope="col">Datum</th>
+            <th scope="col">Host</th>
+            <th scope="col">
                 <span class="btn-group" style="white-space: nowrap;" id="severityform">
                     <span class="dropdown-toggle" data-toggle="dropdown">Severity&nbsp;<span class="caret"></span>
                     </span>
@@ -94,7 +90,7 @@
                     </ul>
                 </span>
             </th>
-            <th>
+            <th scope="col">
                 <span class="btn-group" style="white-space: nowrap;" id="facilityform">
                     <span class="dropdown-toggle" data-toggle="dropdown">Facility&nbsp;<span class="caret"></span>
                     </span>
@@ -118,8 +114,8 @@
                     </ul>
                 </span>
             </th>
-            <th>Program</th>
-            <th>Text</th>
+            <th scope="col">Program</th>
+            <th scope="col">Text</th>
         </tr>
 
     </thead>
