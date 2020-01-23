@@ -21,7 +21,7 @@ namespace SyslogWeb
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddControllersWithViews();
-            ClassMap.Register();
+            services.ConfigureBsonMapping();
             
             services.Configure<MongoDBOptions>(Configuration.GetSection("MongoDB"));
             services.AddSingleton<MongoDBConfig>();
@@ -46,14 +46,13 @@ namespace SyslogWeb
             app.UseRouting();
 
             app.UseAuthorization();
-            app.UseWebSockets();
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllerRoute(
                     name: "default",
                     pattern: "{controller=Home}/{action=Index}/{id?}");
             });
-            WebcocketConfig.Register(mongoDb, 9000);
+            app.UseWebsocket(mongoDb, 9000);
         }
     }
 }

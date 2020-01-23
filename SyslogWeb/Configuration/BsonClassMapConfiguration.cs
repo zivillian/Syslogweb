@@ -1,13 +1,14 @@
 ﻿using System;
+using Microsoft.Extensions.DependencyInjection;
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization;
 using SyslogWeb.Models;
 
 namespace SyslogWeb
 {
-    public class ClassMap
+    public static class BsonClassMapConfiguration
     {
-        public static void Register()
+        public static IServiceCollection ConfigureBsonMapping(this IServiceCollection services)
         {
             BsonClassMap.RegisterClassMap<SyslogEntry>(cm =>
                 {
@@ -21,6 +22,7 @@ namespace SyslogWeb
                     cm.MapProperty(c => c.Facility).SetElementName("FACILITY").SetSerializer(new FacilitySerializer());
                     cm.MapProperty(c => c.Severity).SetElementName("PRIORITY").SetSerializer(new SeveritySerializer());
                 });
+            return services;
         }
     }
 

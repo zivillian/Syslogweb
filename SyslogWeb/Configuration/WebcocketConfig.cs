@@ -2,16 +2,18 @@
 using System.Collections.Concurrent;
 using System.Linq;
 using Fleck;
+using Microsoft.AspNetCore.Builder;
 using SyslogWeb.Websocket;
 
 namespace SyslogWeb
 {
-    public class WebcocketConfig
+    public static class WebcocketConfig
     {
         private static WebSocketServer _server;
         private static readonly ConcurrentDictionary<string, WebsocketClient> Clients = new ConcurrentDictionary<string, WebsocketClient>();
-        public static void Register(MongoDBConfig mongoDb, ushort port)
+        public static IApplicationBuilder UseWebsocket(this IApplicationBuilder app, MongoDBConfig mongoDb, ushort port)
         {
+            app.UseWebSockets();
             _server = new WebSocketServer(String.Format("ws://[::0]:{0}", port));
             try
             {
@@ -28,6 +30,7 @@ namespace SyslogWeb
             {
                 
             }
+            return app;
         }
 
         public static void Broadcast(WebsocketClient sender, string message)
