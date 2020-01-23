@@ -1,15 +1,12 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
-using System.Net;
 using System.Text.RegularExpressions;
 using System.Threading;
 using Fleck;
 using MongoDB.Bson;
 using MongoDB.Driver;
-using MongoDB.Driver.Builders;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Bson;
 using SyslogWeb.Extensions;
 using SyslogWeb.Models;
 
@@ -18,7 +15,8 @@ namespace SyslogWeb.Websocket
 	public class WebsocketClient
 	{
 		private readonly IWebSocketConnection _connection;
-		private Thread _worker;
+        private readonly MongoDBConfig _mongoDb;
+        private Thread _worker;
 		private ObjectId _minId;
 		private bool _closed = false;
 		private bool _paused = false;
@@ -28,10 +26,11 @@ namespace SyslogWeb.Websocket
 		private Regex _positiveRegex;
 		private Regex _negativeRegex;
 
-		public WebsocketClient(IWebSocketConnection connection)
+		public WebsocketClient(IWebSocketConnection connection, MongoDBConfig mongoDb)
 		{
-			_connection = connection; 
-			var info = _connection.ConnectionInfo;
+			_connection = connection;
+            _mongoDb = mongoDb;
+            var info = _connection.ConnectionInfo;
 			Id = String.Format("{0}:{1}", info.ClientIpAddress, info.ClientPort);
 		}
 
@@ -65,7 +64,7 @@ namespace SyslogWeb.Websocket
 				_worker.Abort();
 		}
 
-		private MongoCursor<SyslogEntry> OpenCursor(string message)
+		private IFindFluent<SyslogEntry, SyslogEntry> OpenCursor(string message)
 		{
 			var ser = new JsonSerializer();
 			var info = ser.Deserialize<WsInfo>(new JsonTextReader(new StringReader(message)));
@@ -83,57 +82,49 @@ namespace SyslogWeb.Websocket
 				if (negative.Length > 0)
 					_negativeRegex = new Regex(String.Join("|", negative.Select(x => x.Substring(1))), RegexOptions.Compiled | RegexOptions.IgnoreCase);
 			}
-			var coll = MongoDBConfig.SyslogCollection;
-			query = query.And(Query<SyslogEntry>.GTE(x => x.Id, info.Id));
+			var coll = _mongoDb.SyslogCollection;
+			query = query.And(Builders<SyslogEntry>.Filter.Gte(x => x.Id, info.Id));
 			var cursor = coll.Find(query);
-			cursor.SetFlags(QueryFlags.AwaitData | QueryFlags.NoCursorTimeout | QueryFlags.TailableCursor);
+            cursor.Options.NoCursorTimeout = true;
+            cursor.Options.CursorType = CursorType.TailableAwait;
 			_minId = info.Id;
 			return cursor;
 		}
 
-		private void TailCursor(MongoCursor<SyslogEntry> cursor)
+		private void TailCursor(IFindFluent<SyslogEntry, SyslogEntry> cursor)
 		{
 			try
 			{
 				var ser = new JsonSerializer();
-				using (var enumerator = new MongoCursorEnumerator<SyslogEntry>(cursor))
-				{
-					while (!_closed)
-					{
-						if (_paused)
-						{
-							_resumeEvent.WaitOne();
-						}
-						if (enumerator.MoveNext())
-						{
-							if (enumerator.Current == null) continue;
-							var x = enumerator.Current;
-							if (x.Id <= _minId) continue;
-							if (_positiveRegex != null && !_positiveRegex.IsMatch(x.ToString())) continue;
-							if (_negativeRegex != null && _negativeRegex.IsMatch(x.ToString())) continue;
+                foreach (var x in cursor.ToEnumerable())
+                {
+                    if (_closed) return;
+                    if (_paused)
+                    {
+                        _resumeEvent.WaitOne();
+                    }
+                    if (x == null) continue;
 
-							var writer = new StringWriter();
-							ser.Serialize(writer, new
-								{
-									x.CssClass,
-									Date = x.Date.LocalDateTime.ToString(),
-									Facility = x.Facility.ToString(),
-									x.Host,
-									x.Program,
-									Severity = x.Severity.ToString(),
-									x.Text,
-									HostAsLink = !_selectedHosts.Contains(x.Host),
-									ProgramAsLink = !_selectedPrograms.Contains(x.Program)
-								});
-							Send(writer.ToString());
-						}
-						else if (enumerator.IsDead)
-						{
-							break;
-						}
-					}
-				}
-			}
+                    if (x.Id <= _minId) continue;
+                    if (_positiveRegex != null && !_positiveRegex.IsMatch(x.ToString())) continue;
+                    if (_negativeRegex != null && _negativeRegex.IsMatch(x.ToString())) continue;
+
+                    var writer = new StringWriter();
+                    ser.Serialize(writer, new
+                    {
+                        x.CssClass,
+                        Date = x.Date.LocalDateTime.ToString(),
+                        Facility = x.Facility.ToString(),
+                        x.Host,
+                        x.Program,
+                        Severity = x.Severity.ToString(),
+                        x.Text,
+                        HostAsLink = !_selectedHosts.Contains(x.Host),
+                        ProgramAsLink = !_selectedPrograms.Contains(x.Program)
+                    });
+                    Send(writer.ToString());
+                }
+            }
 			catch (IOException ex)
 			{
 				if (!(ex.InnerException is ThreadAbortException))

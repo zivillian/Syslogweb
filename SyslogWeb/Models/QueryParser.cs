@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using MongoDB.Driver;
-using MongoDB.Driver.Builders;
 using SyslogWeb.Extensions;
 
 namespace SyslogWeb.Models
@@ -30,7 +29,7 @@ namespace SyslogWeb.Models
 
 		protected IList<SyslogFacility> Facilities { get; private set; }
 
-		public static IMongoQuery Parse(string search, MongoResultModel model)
+		public static FilterDefinition<SyslogEntry> Parse(string search, MongoResultModel model)
 		{
 			var parser = new QueryParser();
 			var result =  parser.Parse(search, model.Date);
@@ -42,10 +41,10 @@ namespace SyslogWeb.Models
 			return result;
 		}
 
-		public IMongoQuery Parse(string search, DateTime? maxdate = null)
+		public FilterDefinition<SyslogEntry> Parse(string search, DateTime? maxdate = null)
 		{
 			QueryString = String.Empty;
-			if (String.IsNullOrEmpty(search)) return ParseDate(maxdate, Query.Null);
+			if (String.IsNullOrEmpty(search)) return ParseDate(maxdate, FilterDefinition<SyslogEntry>.Empty);
 
 			var items = search.Split(new[] { ' ', '\n', '\r', '\t' }, StringSplitOptions.RemoveEmptyEntries);
 			var namedItems = items.Where(x => x.Contains(":"))
@@ -57,7 +56,7 @@ namespace SyslogWeb.Models
 								  .ToArray();
 			TextTerms = items.Where(x => !x.Contains(":") || x.StartsWith(":") || x.EndsWith(":")).ToArray();
 
-			IMongoQuery result = Query.Null;
+            var result = FilterDefinition<SyslogEntry>.Empty;
 			var queryParts = new List<string>();
 			foreach (var item in namedItems)
 			{
@@ -87,19 +86,19 @@ namespace SyslogWeb.Models
 							var orQuery = OrEnum(x => x.Severity, item, out enumValues);
 							if (enumValues.Contains(SyslogSeverity.Crit) && !enumValues.Contains(SyslogSeverity.Critical))
 							{
-								orQuery = Query.Or(orQuery, Query<SyslogEntry>.EQ(x => x.Severity, SyslogSeverity.Critical));
+								orQuery = Builders<SyslogEntry>.Filter.Or(orQuery, Builders<SyslogEntry>.Filter.Eq(x => x.Severity, SyslogSeverity.Critical));
 							}
 							else if (!enumValues.Contains(SyslogSeverity.Crit) && enumValues.Contains(SyslogSeverity.Critical))
 							{
-								orQuery = Query.Or(orQuery, Query<SyslogEntry>.EQ(x => x.Severity, SyslogSeverity.Crit));
+								orQuery = Builders<SyslogEntry>.Filter.Or(orQuery, Builders<SyslogEntry>.Filter.Eq(x => x.Severity, SyslogSeverity.Crit));
 							}
 							if (enumValues.Contains(SyslogSeverity.Err) && !enumValues.Contains(SyslogSeverity.Error))
 							{
-								orQuery = Query.Or(orQuery, Query<SyslogEntry>.EQ(x => x.Severity, SyslogSeverity.Error));
+								orQuery = Builders<SyslogEntry>.Filter.Or(orQuery, Builders<SyslogEntry>.Filter.Eq(x => x.Severity, SyslogSeverity.Error));
 							}
 							else if (!enumValues.Contains(SyslogSeverity.Err) && enumValues.Contains(SyslogSeverity.Error))
 							{
-								orQuery = Query.Or(orQuery, Query<SyslogEntry>.EQ(x => x.Severity, SyslogSeverity.Err));
+								orQuery = Builders<SyslogEntry>.Filter.Or(orQuery, Builders<SyslogEntry>.Filter.Eq(x => x.Severity, SyslogSeverity.Err));
 							}
 							result = result.And(orQuery);
 							queryParts.Add(String.Join(" ", item.Select(x => String.Format("severity:{0}", x)).ToArray()));
@@ -113,38 +112,38 @@ namespace SyslogWeb.Models
 			if (TextTerms.Any())
 			{
 				var searchText = String.Join(" ", TextTerms);
-				result = result.And(Query.Text(searchText));
+				result = result.And(Builders<SyslogEntry>.Filter.Text(searchText));
 				queryParts.Add(searchText);
 			}
 			QueryString = String.Join(" ", queryParts);
 			return ParseDate(maxdate, result);
 		}
 
-		private IMongoQuery ParseDate(DateTime? maxdate, IMongoQuery result)
+		private FilterDefinition<SyslogEntry> ParseDate(DateTime? maxdate, FilterDefinition<SyslogEntry> result)
 		{
 			if (maxdate.HasValue)
 			{
-				result = result.And(Query<SyslogEntry>.LTE(x => x.Date, new DateTimeOffset(maxdate.Value, DateTimeOffset.Now.Offset)));
+				result = result.And(Builders<SyslogEntry>.Filter.Lte(x => x.Date, new DateTimeOffset(maxdate.Value, DateTimeOffset.Now.Offset)));
 			}
 			return result;
 		}
 
-		private static IMongoQuery OrEnum<T>(Expression<Func<SyslogEntry, T>> property, IEnumerable<string> values, out List<T> enumValues)
+		private static FilterDefinition<SyslogEntry> OrEnum<T>(Expression<Func<SyslogEntry, T>> property, IEnumerable<string> values, out List<T> enumValues)
 			where T : struct
 		{
 			var v = values.ToArray();
 			var matchEnums = v.Where(x => !x.StartsWith("!")).ParseEnum<T>().ToArray();
 			var notMatchEnums = v.Where(x => x.StartsWith("!")).Select(x => x.Substring(1)).ParseEnum<T>().ToArray();
-			var matchQuery = Query.Null;
+			var matchQuery = FilterDefinition<SyslogEntry>.Empty;
 			if (matchEnums.Any())
 			{
-				matchQuery = Query.Or(matchEnums.Select(x => Query<SyslogEntry>.EQ(property, x)));
+				matchQuery = Builders<SyslogEntry>.Filter.Or(matchEnums.Select(x => Builders<SyslogEntry>.Filter.Eq(property, x)));
 			}
 
-			var notMatchQuery = Query.Null;
+			var notMatchQuery = FilterDefinition<SyslogEntry>.Empty;
 			if (notMatchEnums.Any())
 			{
-				notMatchQuery = Query.And(notMatchEnums.Select(x => Query.Not(Query<SyslogEntry>.EQ(property, x))));
+				notMatchQuery = Builders<SyslogEntry>.Filter.And(notMatchEnums.Select(x => Builders<SyslogEntry>.Filter.Not(Builders<SyslogEntry>.Filter.Eq(property, x))));
 			}
 			enumValues = matchEnums.Concat(notMatchEnums).Distinct().ToList();
 			return matchQuery.And(notMatchQuery);

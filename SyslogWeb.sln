@@ -1,7 +1,9 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 2012
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SyslogWeb", "SyslogWeb\SyslogWeb.csproj", "{58E4017C-0688-4487-9B63-A30E45472AD7}"
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.29709.97
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SyslogWeb", "SyslogWeb\SyslogWeb.csproj", "{75C7A0EC-AF39-400F-BE67-A778E56AC7F2}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -9,12 +11,15 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{58E4017C-0688-4487-9B63-A30E45472AD7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{58E4017C-0688-4487-9B63-A30E45472AD7}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{58E4017C-0688-4487-9B63-A30E45472AD7}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{58E4017C-0688-4487-9B63-A30E45472AD7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{75C7A0EC-AF39-400F-BE67-A778E56AC7F2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{75C7A0EC-AF39-400F-BE67-A778E56AC7F2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{75C7A0EC-AF39-400F-BE67-A778E56AC7F2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{75C7A0EC-AF39-400F-BE67-A778E56AC7F2}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {3D600F38-4213-416E-916C-DAEB5FCE32E9}
 	EndGlobalSection
 EndGlobal

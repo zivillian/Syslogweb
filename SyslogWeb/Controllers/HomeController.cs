@@ -1,26 +1,29 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
-using System.Linq;
-using System.Linq.Expressions;
-using System.Web.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using MongoDB.Bson;
 using MongoDB.Bson.IO;
+using MongoDB.Bson.Serialization;
 using MongoDB.Driver;
-using MongoDB.Driver.Builders;
-using SyslogWeb.Extensions;
 using SyslogWeb.Models;
 
 namespace SyslogWeb.Controllers
 {
     public class HomeController : Controller
     {
+        private readonly MongoDBConfig _mongoDb;
+
+        public HomeController(MongoDBConfig mongoDb)
+        {
+            _mongoDb = mongoDb;
+        }
+
         public ActionResult Index([DefaultValue(null)]string search, string date)
         {
 	        DateTime parsed;
 
-			var coll = MongoDBConfig.SyslogCollection;
+			var coll = _mongoDb.SyslogCollection;
 
 			var model = new MongoResultModel();
 			if (DateTime.TryParse(date, out parsed))
@@ -33,11 +36,11 @@ namespace SyslogWeb.Controllers
 			sw.Stop();
 	        model.ParseTime = sw.ElapsedMilliseconds;
 			var cursor = coll.Find(query);
-			cursor.SetSortOrder(SortBy<SyslogEntry>.Descending(x=>x.Id));
+			cursor.Sort(new SortDefinitionBuilder<SyslogEntry>().Descending(x=>x.Id));
 	        var result = cursor;
 
 			sw.Restart();
-			model.LogEntries = result.Take(100).ToArray();
+			model.LogEntries = result.Limit(100).ToList();
 			sw.Stop();
 			model.FetchTime = sw.ElapsedMilliseconds;
 
@@ -54,7 +57,7 @@ namespace SyslogWeb.Controllers
 					OutputMode = JsonOutputMode.Strict
 				};
 
-				model.QueryJson = query.ToJson(jsonSettings);
+				model.QueryJson = query.Render(BsonSerializer.SerializerRegistry.GetSerializer<SyslogEntry>(), BsonSerializer.SerializerRegistry).ToJson(jsonSettings);
 			}
 
 	        model.RenderTime = sw;

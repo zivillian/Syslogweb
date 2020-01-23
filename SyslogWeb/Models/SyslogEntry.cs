@@ -36,14 +36,14 @@ namespace SyslogWeb.Models
 					case SyslogSeverity.Error:
 					case SyslogSeverity.Crit:
 					case SyslogSeverity.Err:
-						return "danger";
+						return "table-danger";
 					case SyslogSeverity.Warning:
-						return "warning";
+						return "table-warning";
 					case SyslogSeverity.Notice:
 					case SyslogSeverity.Informational:
-						return "info";
+						return "table-info";
 					case SyslogSeverity.Debug:
-						return "success";
+						return "table-success";
 					default:
 						return String.Empty;
 				}

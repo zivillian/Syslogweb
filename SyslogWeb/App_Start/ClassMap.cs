@@ -1,10 +1,6 @@
 ﻿using System;
-using System.Xml;
 using MongoDB.Bson;
-using MongoDB.Bson.IO;
 using MongoDB.Bson.Serialization;
-using MongoDB.Bson.Serialization.Options;
-using MongoDB.Bson.Serialization.Serializers;
 using SyslogWeb.Models;
 
 namespace SyslogWeb
@@ -30,30 +26,26 @@ namespace SyslogWeb
 
 	public class DateTimeOffsetSerializer : MongoDB.Bson.Serialization.Serializers.DateTimeOffsetSerializer
 	{
-		public override void Serialize(BsonWriter bsonWriter, Type nominalType, object value,
-		                               IBsonSerializationOptions options)
-		{
-			var dateTimeOffset = (DateTimeOffset)value;
-			var representationSerializationOption = EnsureSerializationOptions<RepresentationSerializationOptions>(options);
-			if (value != null)
-			switch (representationSerializationOption.Representation)
-			{
-				case BsonType.String:
-					bsonWriter.WriteString(dateTimeOffset.ToString("o"));
-					return;
-				case BsonType.Array:
-					bsonWriter.WriteString(dateTimeOffset.ToString("o"));
-					return;
-			}
-			base.Serialize(bsonWriter, nominalType, value, options);
-		}
+		public override void Serialize(BsonSerializationContext context, BsonSerializationArgs args, DateTimeOffset value)
+        {
+            switch (Representation)
+            {
+                case BsonType.String:
+                    context.Writer.WriteString(value.ToString("o"));
+                    return;
+                case BsonType.Array:
+                    context.Writer.WriteString(value.ToString("o"));
+                    return;
+            }
+            base.Serialize(context, args, value);
+        }
 	}
 
-	public class FacilitySerializer : IBsonSerializer
+	public class FacilitySerializer : IBsonSerializer<SyslogFacility>
 	{
-		public object Deserialize(BsonReader bsonReader, Type nominalType, IBsonSerializationOptions options)
+		public SyslogFacility Deserialize(BsonDeserializationContext context, BsonDeserializationArgs args)
 		{
-			var value = bsonReader.ReadString();
+			var value = context.Reader.ReadString();
 			switch (value)
 			{
 				case "auth":
@@ -103,95 +95,97 @@ namespace SyslogWeb
 			}
 		}
 
-		public void Serialize(BsonWriter bsonWriter, Type nominalType, object value, IBsonSerializationOptions options)
+		public void Serialize(BsonSerializationContext context, BsonSerializationArgs args, SyslogFacility value)
 		{
-			var facility = value is SyslogFacility ? (SyslogFacility)value : SyslogFacility.Unknown;
-			switch (facility)
+			switch (value)
 			{
 				case SyslogFacility.kern:
-					bsonWriter.WriteString("kern");
+					context.Writer.WriteString("kern");
 					break;
 				case SyslogFacility.user:
-					bsonWriter.WriteString("user");
+					context.Writer.WriteString("user");
 					break;
 				case SyslogFacility.mail:
-					bsonWriter.WriteString("mail");
+					context.Writer.WriteString("mail");
 					break;
 				case SyslogFacility.daemon:
-					bsonWriter.WriteString("daemon");
+					context.Writer.WriteString("daemon");
 					break;
 				case SyslogFacility.auth:
-					bsonWriter.WriteString("auth");
+					context.Writer.WriteString("auth");
 					break;
 				case SyslogFacility.syslog:
-					bsonWriter.WriteString("syslog");
+					context.Writer.WriteString("syslog");
 					break;
 				case SyslogFacility.lpr:
-					bsonWriter.WriteString("lpr");
+					context.Writer.WriteString("lpr");
 					break;
 				case SyslogFacility.news:
-					bsonWriter.WriteString("news");
+					context.Writer.WriteString("news");
 					break;
 				case SyslogFacility.uucp:
-					bsonWriter.WriteString("uucp");
+					context.Writer.WriteString("uucp");
 					break;
 				case SyslogFacility.authpriv:
-					bsonWriter.WriteString("authpriv");
+					context.Writer.WriteString("authpriv");
 					break;
 				case SyslogFacility.ftp:
-					bsonWriter.WriteString("ftp");
+					context.Writer.WriteString("ftp");
 					break;
 				case SyslogFacility.cron:
-					bsonWriter.WriteString("cron");
+					context.Writer.WriteString("cron");
 					break;
 				case SyslogFacility.local0:
-					bsonWriter.WriteString("local0");
+					context.Writer.WriteString("local0");
 					break;
 				case SyslogFacility.local1:
-					bsonWriter.WriteString("local1");
+					context.Writer.WriteString("local1");
 					break;
 				case SyslogFacility.local2:
-					bsonWriter.WriteString("local2");
+					context.Writer.WriteString("local2");
 					break;
 				case SyslogFacility.local3:
-					bsonWriter.WriteString("local3");
+					context.Writer.WriteString("local3");
 					break;
 				case SyslogFacility.local4:
-					bsonWriter.WriteString("local4");
+					context.Writer.WriteString("local4");
 					break;
 				case SyslogFacility.local5:
-					bsonWriter.WriteString("local5");
+					context.Writer.WriteString("local5");
 					break;
 				case SyslogFacility.local6:
-					bsonWriter.WriteString("local6");
+					context.Writer.WriteString("local6");
 					break;
 				case SyslogFacility.local7:
-					bsonWriter.WriteString("local7");
+					context.Writer.WriteString("local7");
 					break;
 				case SyslogFacility.ntp:
-					bsonWriter.WriteString("ntp");
+					context.Writer.WriteString("ntp");
 					break;
 				default:
 					throw new ArgumentOutOfRangeException();
 			}
 		}
 
-		public object Deserialize(BsonReader bsonReader, Type nominalType, Type actualType, IBsonSerializationOptions options)
-		{
-			return Deserialize(bsonReader, nominalType, options);
-		}
+        object IBsonSerializer.Deserialize(BsonDeserializationContext context, BsonDeserializationArgs args)
+        {
+            return Deserialize(context, args);
+        }
 
-		public IBsonSerializationOptions GetDefaultSerializationOptions()
-		{
-			return null;
-		}
-	}
+        public void Serialize(BsonSerializationContext context, BsonSerializationArgs args, object value)
+        {
+            var facility = value is SyslogFacility ? (SyslogFacility)value : SyslogFacility.Unknown;
+			Serialize(context, args, facility);
+        }
 
-	public class SeveritySerializer : IBsonSerializer
+        public Type ValueType => typeof(SyslogFacility);
+    }
+
+	public class SeveritySerializer : IBsonSerializer<SyslogSeverity>
 	{
-		public object Deserialize(BsonReader bsonReader, Type nominalType, IBsonSerializationOptions options)
+		public SyslogSeverity Deserialize(BsonDeserializationContext context, BsonDeserializationArgs args)
 		{
-			var value = bsonReader.ReadString();
+			var value = context.Reader.ReadString();
 			switch (value)
 			{
 				case "info":
@@ -217,54 +211,55 @@ namespace SyslogWeb
 			}
 		}
 
-		public object Deserialize(BsonReader bsonReader, Type nominalType, Type actualType, IBsonSerializationOptions options)
-		{
-			return Deserialize(bsonReader, nominalType, options);
-		}
+        object IBsonSerializer.Deserialize(BsonDeserializationContext context, BsonDeserializationArgs args)
+        {
+            return Deserialize(context, args);
+        }
 
-		public IBsonSerializationOptions GetDefaultSerializationOptions()
-		{
-			return null;
-		}
+        public void Serialize(BsonSerializationContext context, BsonSerializationArgs args, object value)
+        {
+            var severity = value is SyslogSeverity ? (SyslogSeverity) value : SyslogSeverity.Unknown;
+			Serialize(context, args, severity);
+        }
 
-		public void Serialize(BsonWriter bsonWriter, Type nominalType, object value, IBsonSerializationOptions options)
+		public void Serialize(BsonSerializationContext context, BsonSerializationArgs args, SyslogSeverity value)
 		{
-			var severity = value is SyslogSeverity ? (SyslogSeverity) value : SyslogSeverity.Unknown;
-			switch (severity)
+			switch (value)
 			{
 				case SyslogSeverity.Critical:
-					bsonWriter.WriteString("critical");
+					context.Writer.WriteString("critical");
 					break;
 				case SyslogSeverity.Crit:
-					bsonWriter.WriteString("crit");
+					context.Writer.WriteString("crit");
 					break;
 				case SyslogSeverity.Error:
-					bsonWriter.WriteString("error");
+					context.Writer.WriteString("error");
 					break;
 				case SyslogSeverity.Err:
-					bsonWriter.WriteString("err");
+					context.Writer.WriteString("err");
 					break;
 				case SyslogSeverity.Notice:
-					bsonWriter.WriteString("notice");
+					context.Writer.WriteString("notice");
 					break;
 				case SyslogSeverity.Informational:
-					bsonWriter.WriteString("info");
+					context.Writer.WriteString("info");
 					break;
 				case SyslogSeverity.Debug:
-					bsonWriter.WriteString("debug");
+					context.Writer.WriteString("debug");
 					break;
 				case SyslogSeverity.Warning:
-					bsonWriter.WriteString("warning");
+					context.Writer.WriteString("warning");
 					break;
 				case SyslogSeverity.Emergency:
-					bsonWriter.WriteString("emerg");
+					context.Writer.WriteString("emerg");
 					break;
 				case SyslogSeverity.Alert:
-					bsonWriter.WriteString("alert");
+					context.Writer.WriteString("alert");
 					break;
 				case SyslogSeverity.Unknown:
 					throw new ArgumentOutOfRangeException();
 			}
 		}
+        public Type ValueType => typeof(SyslogSeverity);
 	}
 }

@@ -40,7 +40,7 @@
 }}
 
 <h2>@ViewBag.Title</h2>
-<form method="GET" action="@Url.Action("Index")" id="searchform" data-wsport="@SyslogWeb.Properties.Settings.Default.WebsocketPort" data-id="@Model.ObjectId" data-query="@Model.Query">
+<form method="GET" action="@Url.Action("Index")" id="searchform" data-wsport="9000" data-id="@Model.ObjectId" data-query="@Model.Query">
     <span class="row">
         <span class="input-group col-md-9">
             <span class="input-group-btn">
@@ -56,7 +56,7 @@
             </span>
         </span>
         <span class="input-group col-md-3 date">
-            <input class="form-control" type="text" placeholder="max. Datum" value="@Model.Date" name="date" autocomplete="off"/>
+            <input class="form-control" type="datetime" placeholder="max. Datum" value="@Model.Date" name="date" autocomplete="off"/>
             <span class="input-group-btn">
                 <button class="btn btn-default datepickerbutton" type="button">
                     <span class="glyphicon glyphicon-calendar"></span>
