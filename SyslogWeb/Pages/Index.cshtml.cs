@@ -20,8 +20,6 @@ namespace SyslogWeb.Pages
         private readonly MongoDBConfig _mongoDb;
         private readonly ILogger<IndexModel> _logger;
 
-        public long Total { get; set; }
-
         [BindProperty(SupportsGet = true, Name = "q")]
         public string Query { get; set; }
         
@@ -30,8 +28,6 @@ namespace SyslogWeb.Pages
         public long ParseTime { get; set; }
 
         public long FetchTime { get; set; }
-
-        public long CountTime { get; set; }
 
         [BindProperty(SupportsGet = true, Name = "date")]
         public DateTime? Date { get; set; }
@@ -45,6 +41,7 @@ namespace SyslogWeb.Pages
         public IEnumerable<string> SelectedPrograms { get; set; } 
 
         public IEnumerable<SyslogEntry> LogEntries { get; set; }
+
         public IEnumerable<MongoResultRow> LogEntryModels
         {
             get
@@ -118,11 +115,6 @@ namespace SyslogWeb.Pages
             LogEntries = await result.Limit(100).ToListAsync(cancellationToken);
             sw.Stop();
             FetchTime = sw.ElapsedMilliseconds;
-
-            sw.Restart();
-            Total = await result.CountDocumentsAsync(cancellationToken);
-            sw.Stop();
-            CountTime = sw.ElapsedMilliseconds;
             
             if (query != null)
             {

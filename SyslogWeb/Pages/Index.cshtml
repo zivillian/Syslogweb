@@ -11,30 +11,34 @@
 @if (Html.IsDebug())
 {
     @section footer
-{
-        <div class="panel-group" id="accordion">
-            <div class="panel panel-default">
-                <div class="panel-heading">
-                    <h3 class="panel-title">
-                        <a data-toggle="collapse" data-parent="#accordion" href="#collapseOne">Json Query</a>
+    {
+        <div class="accordion" id="accordionExample">
+            <div class="card">
+                <div class="card-header" id="headingOne">
+                    <h3 class="mb-0">
+                        <button class="btn btn-link" type="button" data-toggle="collapse" data-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+                            Json Query
+                        </button>
                     </h3>
                 </div>
-                <div id="collapseOne" class="panel-collapse collapse">
-                    <div class="panel-body">
-                        <pre class="prettyprint">@Model.QueryJson</pre>
+
+                <div id="collapseOne" class="collapse" aria-labelledby="headingOne" data-parent="#accordionExample">
+                    <div class="card-body">
+                        <pre>@Model.QueryJson</pre>
                     </div>
                 </div>
             </div>
-            <div class="panel panel-default">
-                <div class="panel-heading">
-                    <h4 class="panel-title">
-                        <a data-toggle="collapse" data-parent="#accordion" href="#collapseThree">Stats</a>
+            <div class="card">
+                <div class="card-header" id="headingThree">
+                    <h4 class="mb-0">
+                        <button class="btn btn-link" type="button" data-toggle="collapse" data-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
+                            Stats
+                        </button>
                     </h4>
                 </div>
-                <div id="collapseThree" class="panel-collapse collapse">
-                    <div class="panel-body">
+                <div id="collapseThree" class="collapse" aria-labelledby="headingThree" data-parent="#accordionExample">
+                    <div class="card-body">
                         <p>Parse: @Model.ParseTime ms</p>
-                        <p>Count: @Model.CountTime ms</p>
                         <p>Fetch: @Model.FetchTime ms</p>
                         <p>Render: @sw.ElapsedMilliseconds ms</p>
                         @{ sw.Stop(); }
@@ -61,7 +65,7 @@
             </div>
         </div>
         <span class="input-group col-md-3 date">
-            <input class="form-control" placeholder="max. Datum" asp-for="@Model.Date" name="date" autocomplete="off" />
+            <input class="form-control" placeholder="max. Datum" asp-for="@Model.Date" name="date" value="@Model.Date?.ToString("O")" type="text" autocomplete="off" />
         </span>
     </div>
 
@@ -72,54 +76,58 @@
             <th scope="col">Datum</th>
             <th scope="col">Host</th>
             <th scope="col">
-                <span class="btn-group" style="white-space: nowrap;" id="severityform">
-                    <span class="dropdown-toggle" data-toggle="dropdown">
-                        Severity&nbsp;<span class="caret"></span>
-                    </span>
-                    <ul class="dropdown-menu dropdown-menu-form" role="menu">
-                        @foreach (var value in Enum.GetValues(typeof(SyslogSeverity)).OfType<SyslogSeverity>().Where(x => x >= 0).OrderBy(x => x))
-                        {
-                            <li>
-                                <label class="checkbox">
-                                    @if (Model.SelectedSeverities.Contains(value))
-                                    {
-                                        <input type="checkbox" checked="checked" value="@value.ToString()" />
-                                    }
-                                    else
-                                    {
-                                        <input type="checkbox" value="@value.ToString()" />
-                                    }
+                <div class="dropdown" id="severityform">
+                    <a class="dropdown-toggle" href="#" role="button" id="dropdownSeverity" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        Severity
+                    </a>
+                    <div class="dropdown-menu" aria-labelledby="dropdownSeverity">
+                        <div class="px-2">
+                            @foreach (var value in Enum.GetValues(typeof(SyslogSeverity)).OfType<SyslogSeverity>().Where(x => x >= 0).OrderBy(x => x))
+                            {
+                            <div class="form-check">
+                                @if (Model.SelectedSeverities.Contains(value))
+                                {
+                                    <input class="form-check-input" type="checkbox" checked="checked" value="@value.ToString()" id="severity_@value" />
+                                }
+                                else
+                                {
+                                    <input class="form-check-input" type="checkbox" value="@value.ToString()" id="severity_@value" />
+                                }
+                                <label class="form-check-label" for="severity_@value">
                                     @value.ToString()
                                 </label>
-                            </li>
-                        }
-                    </ul>
-                </span>
+                            </div>
+                            }
+                        </div>
+                    </div>
+                </div>
             </th>
             <th scope="col">
-                <span class="btn-group" style="white-space: nowrap;" id="facilityform">
-                    <span class="dropdown-toggle" data-toggle="dropdown">
-                        Facility&nbsp;<span class="caret"></span>
-                    </span>
-                    <ul class="dropdown-menu dropdown-menu-form" role="menu">
-                        @foreach (var value in Enum.GetValues(typeof(SyslogFacility)).OfType<SyslogFacility>().OrderBy(x => x.ToString()))
-                        {
-                            <li>
-                                <label class="checkbox">
+                <div class="dropdown" id="facilityform">
+                    <a class="dropdown-toggle" href="#" role="button" id="dropdownFacility" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        Facility
+                    </a>
+                    <div class="dropdown-menu" aria-labelledby="dropdownFacility">
+                        <div class="px-2">
+                            @foreach (var value in Enum.GetValues(typeof(SyslogFacility)).OfType<SyslogFacility>().OrderBy(x => x.ToString()))
+                            {
+                                <div class="form-check">
                                     @if (Model.SelectedFacilities.Contains(value))
                                     {
-                                        <input type="checkbox" checked="checked" value="@value.ToString()" />
+                                        <input class="form-check-input" type="checkbox" checked="checked" value="@value.ToString()" id="facility_@value" />
                                     }
                                     else
                                     {
-                                        <input type="checkbox" value="@value.ToString()" />
+                                        <input class="form-check-input" type="checkbox" value="@value.ToString()" id="facility_@value" />
                                     }
-                                    @value.ToString()
-                                </label>
-                            </li>
-                        }
-                    </ul>
-                </span>
+                                    <label class="form-check-label" for="facility_@value">
+                                        @value.ToString()
+                                    </label>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
             </th>
             <th scope="col">Program</th>
             <th scope="col">Text</th>
@@ -129,11 +137,36 @@
     <tbody>
         @foreach (var entry in Model.LogEntryModels)
         {
-            <partial name="Shared/PartialRow" model="@entry" />
+            <tr class="@entry.CssClass">
+                <td>@Html.Raw(entry.Date.LocalDateTime.ToString().Replace(" ", "&nbsp;"))</td>
+                <td style="white-space: nowrap;">
+                    @if (!entry.HostAsLink)
+                    {
+                        @entry.Host
+                    }
+                    else
+                    {
+                        <a asp-route-q="@($"{entry.Query} host:{entry.Host}")" asp-route-date="@(entry.QueryDate.HasValue?entry.QueryDate.ToString():String.Empty)">@entry.Host</a>
+                    }
+                </td>
+                <td>@entry.Severity</td>
+                <td>@entry.Facility</td>
+                <td>
+                    @if (!entry.ProgramAsLink)
+                    {
+                        @entry.Program
+                    }
+                    else
+                    {
+                        <a asp-route-q="@($"{entry.Query} program:{entry.Program}")" asp-route-date="@(entry.QueryDate.HasValue?entry.QueryDate.ToString():String.Empty)">@entry.Program</a>
+                    }
+                </td>
+                <td>@entry.Text</td>
+            </tr>
         }
     </tbody>
 </table>
 @if (Model.MinDate.HasValue)
 {
-    <a asp-route-q="@Model.Query" asp-route-date="@Model.MinDate">Next</a>
+    <a asp-route-q="@Model.Query" asp-route-date="@Model.MinDate?.ToString("O")">Next</a>
 }

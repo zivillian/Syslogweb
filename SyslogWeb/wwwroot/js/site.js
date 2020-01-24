@@ -1,7 +1,5 @@
 ﻿$('.dropdown-menu').on('click', function (e) {
-    if ($(this).hasClass('dropdown-menu-form')) {
-        e.stopPropagation();
-    }
+    e.stopPropagation();
 });
 
 $('#facilityform input[type=checkbox]').change(function () {
