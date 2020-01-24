@@ -1,54 +1,59 @@
-﻿@using SyslogWeb.Models
+﻿@page
+@using System.Diagnostics
+@using SyslogWeb.Models
 @using SyslogWeb.Extensions
-@model MongoResultModel
+@model IndexModel
 @{
-    ViewBag.Title = "Syslog";
+    var sw = new Stopwatch();
+    sw.Start();
+    ViewData["Title"] = "SyslogWeb";
 }
-@if (Html.IsDebug()) { 
-@section footer
+@if (Html.IsDebug())
 {
-    <div class="panel-group" id="accordion">
-        <div class="panel panel-default">
-            <div class="panel-heading">
-                <h3 class="panel-title">
-                    <a data-toggle="collapse" data-parent="#accordion" href="#collapseOne">Json Query</a>
-                </h3>
+    @section footer
+{
+        <div class="panel-group" id="accordion">
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <h3 class="panel-title">
+                        <a data-toggle="collapse" data-parent="#accordion" href="#collapseOne">Json Query</a>
+                    </h3>
+                </div>
+                <div id="collapseOne" class="panel-collapse collapse">
+                    <div class="panel-body">
+                        <pre class="prettyprint">@Model.QueryJson</pre>
+                    </div>
+                </div>
             </div>
-            <div id="collapseOne" class="panel-collapse collapse">
-                <div class="panel-body">
-                    <pre class="prettyprint">@Model.QueryJson</pre>
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <h4 class="panel-title">
+                        <a data-toggle="collapse" data-parent="#accordion" href="#collapseThree">Stats</a>
+                    </h4>
+                </div>
+                <div id="collapseThree" class="panel-collapse collapse">
+                    <div class="panel-body">
+                        <p>Parse: @Model.ParseTime ms</p>
+                        <p>Count: @Model.CountTime ms</p>
+                        <p>Fetch: @Model.FetchTime ms</p>
+                        <p>Render: @sw.ElapsedMilliseconds ms</p>
+                        @{ sw.Stop(); }
+                    </div>
                 </div>
             </div>
         </div>
-        <div class="panel panel-default">
-            <div class="panel-heading">
-                <h4 class="panel-title">
-                    <a data-toggle="collapse" data-parent="#accordion" href="#collapseThree">Stats</a>
-                </h4>
-            </div>
-            <div id="collapseThree" class="panel-collapse collapse">
-                <div class="panel-body">
-                    <p>Parse: @Model.ParseTime ms</p>
-                    <p>Count: @Model.CountTime ms</p>
-                    <p>Fetch: @Model.FetchTime ms</p>
-                    <p>Render: @Model.RenderTime.ElapsedMilliseconds ms</p>
-                    @{ Model.RenderTime.Stop(); }
-                </div>
-            </div>
-        </div>
-    </div>
-}}
+    }}
 
 <h2>@ViewBag.Title</h2>
-<form method="GET" action="@Url.Action("Index")" id="searchform" data-wsport="9000" data-id="@Model.ObjectId" data-query="@Model.Query">
-    <span class="row">
+<form method="GET" id="searchform" data-wsport="9000" data-id="@Model.ObjectId" data-query="@Model.Query">
+    <div class="row">
         <div class="input-group col-md-9">
             <div class="input-group-prepend">
                 <button class="btn btn-outline-secondary" type="button" id="pause">
                     <span class="fas fa-pause"></span>
                 </button>
             </div>
-            <input id="searchinput" class="form-control" type="text" placeholder="Suche..." value="@Model.Query" name="search" autocomplete="off" />
+            <input id="searchinput" class="form-control" placeholder="Suche..." asp-for="@Model.Query" name="q" autocomplete="off" />
             <div class="input-group-append">
                 <button class="btn btn-outline-secondary" type="submit">
                     <span class="fas fa-search"></span>
@@ -56,10 +61,10 @@
             </div>
         </div>
         <span class="input-group col-md-3 date">
-            <input class="form-control" type="datetime-local" placeholder="max. Datum" value="@Model.Date" name="date" autocomplete="off" />
+            <input class="form-control" placeholder="max. Datum" asp-for="@Model.Date" name="date" autocomplete="off" />
         </span>
-    </span>
-    
+    </div>
+
 </form>
 <table class="table table-sm">
     <thead>
@@ -68,7 +73,8 @@
             <th scope="col">Host</th>
             <th scope="col">
                 <span class="btn-group" style="white-space: nowrap;" id="severityform">
-                    <span class="dropdown-toggle" data-toggle="dropdown">Severity&nbsp;<span class="caret"></span>
+                    <span class="dropdown-toggle" data-toggle="dropdown">
+                        Severity&nbsp;<span class="caret"></span>
                     </span>
                     <ul class="dropdown-menu dropdown-menu-form" role="menu">
                         @foreach (var value in Enum.GetValues(typeof(SyslogSeverity)).OfType<SyslogSeverity>().Where(x => x >= 0).OrderBy(x => x))
@@ -77,11 +83,11 @@
                                 <label class="checkbox">
                                     @if (Model.SelectedSeverities.Contains(value))
                                     {
-                                        <input type="checkbox" checked="checked" value="@value.ToString()"/>
+                                        <input type="checkbox" checked="checked" value="@value.ToString()" />
                                     }
                                     else
                                     {
-                                        <input type="checkbox" value="@value.ToString()"/>
+                                        <input type="checkbox" value="@value.ToString()" />
                                     }
                                     @value.ToString()
                                 </label>
@@ -92,7 +98,8 @@
             </th>
             <th scope="col">
                 <span class="btn-group" style="white-space: nowrap;" id="facilityform">
-                    <span class="dropdown-toggle" data-toggle="dropdown">Facility&nbsp;<span class="caret"></span>
+                    <span class="dropdown-toggle" data-toggle="dropdown">
+                        Facility&nbsp;<span class="caret"></span>
                     </span>
                     <ul class="dropdown-menu dropdown-menu-form" role="menu">
                         @foreach (var value in Enum.GetValues(typeof(SyslogFacility)).OfType<SyslogFacility>().OrderBy(x => x.ToString()))
@@ -101,11 +108,11 @@
                                 <label class="checkbox">
                                     @if (Model.SelectedFacilities.Contains(value))
                                     {
-                                        <input type="checkbox" checked="checked" value="@value.ToString()"/>
+                                        <input type="checkbox" checked="checked" value="@value.ToString()" />
                                     }
                                     else
                                     {
-                                        <input type="checkbox" value="@value.ToString()"/>
+                                        <input type="checkbox" value="@value.ToString()" />
                                     }
                                     @value.ToString()
                                 </label>
@@ -122,11 +129,11 @@
     <tbody>
         @foreach (var entry in Model.LogEntryModels)
         {
-            @Html.Partial("PartialRow", entry);
+            <partial name="Shared/PartialRow" model="@entry" />
         }
     </tbody>
 </table>
 @if (Model.MinDate.HasValue)
 {
-    @Html.ActionLink("Next", "Index", "Home", new { Search = Model.Query, Date = Model.MinDate.ToString() }, null);
+    <a asp-route-q="@Model.Query" asp-route-date="@Model.MinDate">Next</a>
 }

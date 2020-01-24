@@ -9,7 +9,7 @@
         }
         else
         {
-            @Html.ActionLink(Model.Host, "Index", "Home", new {Search = String.Format("{0} host:{1}", Model.Query, Model.Host), Date = Model.QueryDate.HasValue?Model.QueryDate.ToString():String.Empty}, null)
+            <a asp-route-q="@($"{Model.Query} host:{Model.Host}")" asp-route-date="@(Model.QueryDate.HasValue?Model.QueryDate.ToString():String.Empty)">@Model.Host</a>
         }
     </td>
     <td>@Model.Severity</td>
@@ -21,7 +21,7 @@
         }
         else
         {
-            @Html.ActionLink(Model.Program, "Index", "Home", new {Search = String.Format("{0} program:{1}", Model.Query, Model.Program), Date = Model.QueryDate.HasValue?Model.QueryDate.ToString():String.Empty}, null)
+            <a asp-route-q="@($"{Model.Query} program:{Model.Program}")" asp-route-q="@(Model.QueryDate.HasValue?Model.QueryDate.ToString():String.Empty)">@Model.Program</a>
         }
     </td>
     <td>@Model.Text</td>

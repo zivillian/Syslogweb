@@ -25,21 +25,9 @@ namespace SyslogWeb.Models
 
         public string QueryString { get; private set; }
 
-        protected IList<SyslogSeverity> Severities { get; private set; }
+        public IList<SyslogSeverity> Severities { get; private set; }
 
-        protected IList<SyslogFacility> Facilities { get; private set; }
-
-        public static FilterDefinition<SyslogEntry> Parse(string search, MongoResultModel model)
-        {
-            var parser = new QueryParser();
-            var result =  parser.Parse(search, model.Date);
-            model.Query = parser.QueryString;
-            model.SelectedFacilities = parser.Facilities;
-            model.SelectedSeverities = parser.Severities;
-            model.SelectedPrograms = parser.Programs;
-            model.SelectedHosts = parser.Hosts;
-            return result;
-        }
+        public IList<SyslogFacility> Facilities { get; private set; }
 
         public FilterDefinition<SyslogEntry> Parse(string search, DateTime? maxdate = null)
         {
