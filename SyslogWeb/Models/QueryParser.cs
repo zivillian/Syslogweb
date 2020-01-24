@@ -74,31 +74,29 @@ namespace SyslogWeb.Models
                         break;
                     case "facility":
                         {
-                            List<SyslogFacility> enumValues;
-                            result = result.And(OrEnum(x => x.Facility, item, out enumValues));
+                            result = result.And(OrEnum(x => x.Facility, item, out var enumValues));
                             queryParts.Add(String.Join(" ", item.Select(x => String.Format("facility:{0}", x)).ToArray()));
                             Facilities = enumValues;
                             break;
                         }
                     case "severity":
                         {
-                            List<SyslogSeverity> enumValues;
-                            var orQuery = OrEnum(x => x.Severity, item, out enumValues);
+                            var orQuery = OrEnum(x => x.Severity, item, out var enumValues);
                             if (enumValues.Contains(SyslogSeverity.Crit) && !enumValues.Contains(SyslogSeverity.Critical))
                             {
-                                orQuery = Builders<SyslogEntry>.Filter.Or(orQuery, Builders<SyslogEntry>.Filter.Eq(x => x.Severity, SyslogSeverity.Critical));
+                                orQuery = orQuery.Or(Builders<SyslogEntry>.Filter.Eq(x => x.Severity, SyslogSeverity.Critical));
                             }
                             else if (!enumValues.Contains(SyslogSeverity.Crit) && enumValues.Contains(SyslogSeverity.Critical))
                             {
-                                orQuery = Builders<SyslogEntry>.Filter.Or(orQuery, Builders<SyslogEntry>.Filter.Eq(x => x.Severity, SyslogSeverity.Crit));
+                                orQuery = orQuery.Or(Builders<SyslogEntry>.Filter.Eq(x => x.Severity, SyslogSeverity.Crit));
                             }
                             if (enumValues.Contains(SyslogSeverity.Err) && !enumValues.Contains(SyslogSeverity.Error))
                             {
-                                orQuery = Builders<SyslogEntry>.Filter.Or(orQuery, Builders<SyslogEntry>.Filter.Eq(x => x.Severity, SyslogSeverity.Error));
+                                orQuery = orQuery.Or(Builders<SyslogEntry>.Filter.Eq(x => x.Severity, SyslogSeverity.Error));
                             }
                             else if (!enumValues.Contains(SyslogSeverity.Err) && enumValues.Contains(SyslogSeverity.Error))
                             {
-                                orQuery = Builders<SyslogEntry>.Filter.Or(orQuery, Builders<SyslogEntry>.Filter.Eq(x => x.Severity, SyslogSeverity.Err));
+                                orQuery = orQuery.Or(Builders<SyslogEntry>.Filter.Eq(x => x.Severity, SyslogSeverity.Err));
                             }
                             result = result.And(orQuery);
                             queryParts.Add(String.Join(" ", item.Select(x => String.Format("severity:{0}", x)).ToArray()));

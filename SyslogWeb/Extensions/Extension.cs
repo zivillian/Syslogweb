@@ -26,6 +26,13 @@ namespace SyslogWeb.Extensions
             return Builders<T>.Filter.And(left, right);
         }
 
+        public static FilterDefinition<T> Or<T>(this FilterDefinition<T> left, FilterDefinition<T> right)
+        {
+            if (left == null || left == FilterDefinition<T>.Empty) return right;
+            if (right == null || right == FilterDefinition<T>.Empty) return left;
+            return Builders<T>.Filter.Or(left, right);
+        }
+
         public static IEnumerable<T> ParseEnum<T>(this IEnumerable<string> values)
             where T : struct
         {

@@ -41,11 +41,11 @@ namespace SyslogWeb.Models
                         return "table-warning";
                     case SyslogSeverity.Notice:
                     case SyslogSeverity.Informational:
-                        return "table-info";
+                        return String.Empty;
                     case SyslogSeverity.Debug:
                         return "table-success";
                     default:
-                        return String.Empty;
+                        return "table-info";
                 }
             }
         }

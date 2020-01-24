@@ -1,6 +1,8 @@
 ﻿using System;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using MongoDB.Bson;
 using MongoDB.Bson.IO;
@@ -19,14 +21,12 @@ namespace SyslogWeb.Controllers
             _mongoDb = mongoDb;
         }
 
-        public ActionResult Index([DefaultValue(null)]string search, string date)
+        public async Task<ActionResult> Index([DefaultValue(null)]string search, string date, CancellationToken cancellationToken)
         {
-        DateTime parsed;
-
             var coll = _mongoDb.SyslogCollection;
 
             var model = new MongoResultModel();
-            if (DateTime.TryParse(date, out parsed))
+            if (DateTime.TryParse(date, out var parsed))
             {
                 model.Date = parsed;
             }
@@ -34,18 +34,18 @@ namespace SyslogWeb.Controllers
             sw.Start();
             var query = QueryParser.Parse(search, model);
             sw.Stop();
-        model.ParseTime = sw.ElapsedMilliseconds;
+            model.ParseTime = sw.ElapsedMilliseconds;
             var cursor = coll.Find(query);
             cursor.Sort(new SortDefinitionBuilder<SyslogEntry>().Descending(x=>x.Id));
-        var result = cursor;
+            var result = cursor;
 
             sw.Restart();
-            model.LogEntries = result.Limit(100).ToList();
+            model.LogEntries = await result.Limit(100).ToListAsync(cancellationToken);
             sw.Stop();
             model.FetchTime = sw.ElapsedMilliseconds;
 
             sw.Restart();
-            model.Total = result.Count();
+            model.Total = await result.CountDocumentsAsync(cancellationToken);
             sw.Stop();
             model.CountTime = sw.ElapsedMilliseconds;
             
@@ -60,7 +60,7 @@ namespace SyslogWeb.Controllers
                 model.QueryJson = query.Render(BsonSerializer.SerializerRegistry.GetSerializer<SyslogEntry>(), BsonSerializer.SerializerRegistry).ToJson(jsonSettings);
             }
 
-        model.RenderTime = sw;
+            model.RenderTime = sw;
             sw.Restart();
             return View(model);
         }
