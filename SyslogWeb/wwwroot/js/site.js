@@ -46,56 +46,61 @@ $('#severityform input[type=checkbox]').change(function () {
 
 function StartWebsocket() {
     var $form = $('#searchform');
-    var port = $form.attr('data-wsport');
     var id = $form.attr('data-id');
     if (id === '000000000000000000000000') return;
-    var connection = new WebSocket('ws://' + window.location.hostname + ':' + port + '/syslog');
+    var connection = new signalR.HubConnectionBuilder().withUrl("/log").build();
     var $table = $('table.table > tbody');
-    
-    connection.onopen = function () {
-        connection.send(JSON.stringify({ Id: id, Search: $form.attr('data-query') }));
-    };
-    
-    connection.onmessage = function (e) {
-        var data = JSON.parse(e.data);
-        var template = '<tr class="{{CssClass}}"><td>{{Date}}</td>';
-        if (data.HostAsLink) {
-            template = template + '<td style="white-space: nowrap;"><a href="#" data-text=" host:{{Host}}">{{Host}}</a></td>';
-        } else {
-            template = template + '<td style="white-space: nowrap;">{{Host}}</td>';
-        }
-        template = template + '<td>{{Severity}}</td><td>{{Facility}}</td>';
-        if (data.ProgramAsLink) {
-            template = template + '<td><a href="#" data-text=" program:{{Program}}">{{Program}}</a></td>';
-        } else {
-            template = template + '<td>{{Program}}</td>';
-        }
-        template = template + '<td>{{Text}}</td></tr>';
-        var row = Mustache.render(template, data);
-        var $row = $(row);
-        $row.find('a').click(function(ev) {
-            var value = $(ev.target).attr('data-text');
-            var $search = $('#searchinput');
-            var text = $search.val();
-            $search.val((text + value).trim());
-            $('#searchform').submit();
-        });
-        $table.prepend($row);
-    };
 
     $('#pause').on('click', function () {
         var $span = $(this).find('span');
         if ($span.hasClass('fa-pause')) {
             $span.removeClass('fa-pause').addClass('fa-play');
-            connection.send('pause');
+            connection.invoke('Pause');
         } else {
             $span.removeClass('fa-play').addClass('fa-pause');
-            connection.send('resume');
+            connection.invoke('Resume');
         }
+    });
+    connection.start().then(function() {
+        connection.stream("Tail", { Id: id, Search: $form.attr('data-query') } )
+        .subscribe({
+            next: (item) => {
+                var template = `<tr class="${item.cssClass}"><td>${item.date}</td>`;
+                if (item.hostAsLink) {
+                    template = template + `<td style="white-space: nowrap;"><a href="#" data-text=" host:${item.host}">${item.host}</a></td>`;
+                } else {
+                    template = template + `<td style="white-space: nowrap;">${item.host}</td>`;
+                }
+                template = template + `<td>${item.severity}</td><td>${item.facility}</td>`;
+                if (item.programAsLink) {
+                    template = template + `<td><a href="#" data-text=" program:${item.program}">${item.program}</a></td>`;
+                } else {
+                    template = template + `<td>${item.program}</td>`;
+                }
+                template = template + `<td>${item.text}</td></tr>`;
+                var row = template;
+                var $row = $(row);
+                $row.find('a').click(function(ev) {
+                    var value = $(ev.target).attr('data-text');
+                    var $search = $('#searchinput');
+                    var text = $search.val();
+                    $search.val((text + value).trim());
+                    $('#searchform').submit();
+                });
+                $table.prepend($row);
+            },
+            complete: () => {
+                console.log('log completed???');
+            },
+            error: (err) => {
+                console.log(err);
+            }
+        });
+    }).catch(function (err) {
+        return console.error(err.toString());
     });
 }
 
 $(document).ready(function () {
-    window.prettyPrint && prettyPrint();
     StartWebsocket();
 });

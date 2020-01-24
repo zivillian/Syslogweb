@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using SyslogWeb.Hubs;
 using SyslogWeb.Models;
 
 namespace SyslogWeb
@@ -21,6 +22,7 @@ namespace SyslogWeb
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddRazorPages();
+            services.AddSignalR();
             services.ConfigureBsonMapping();
             
             services.Configure<MongoDBOptions>(Configuration.GetSection("MongoDB"));
@@ -49,8 +51,8 @@ namespace SyslogWeb
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapRazorPages();
+                endpoints.MapHub<LogHub>("/log");
             });
-            app.UseWebsocket(mongoDb, 9000);
         }
     }
 }
