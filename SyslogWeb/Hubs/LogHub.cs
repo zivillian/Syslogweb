@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.SignalR;
@@ -48,6 +49,20 @@ namespace SyslogWeb.Hubs
             var query = parser.Parse(message.Search);
             var coll = _mongoDb.SyslogCollection;
             query = query.And(Builders<SyslogEntry>.Filter.Gte(x => x.Id, message.ObjectId));
+            
+            Regex positiveRegex = null;
+            Regex negativeRegex = null;
+            if (parser.TextTerms != null)
+            {
+                var negative = parser.TextTerms.Where(x => x.StartsWith("-")).ToArray();
+                var positive = parser.TextTerms.Except(negative).ToArray();
+                if (positive.Length > 0)
+                {
+                    positiveRegex = new Regex(String.Join("|", positive), RegexOptions.IgnoreCase);
+                }
+                if (negative.Length > 0)
+                    negativeRegex = new Regex(String.Join("|", negative.Select(x => x.Substring(1))), RegexOptions.IgnoreCase);
+            }
             var cursor = coll.Find(query);
             cursor.Options.NoCursorTimeout = true;
             cursor.Options.CursorType = CursorType.TailableAwait;
@@ -60,6 +75,8 @@ namespace SyslogWeb.Hubs
                     {
                         if (x is null) continue;
                         if (x.Id <= message.ObjectId) continue;
+                        if (positiveRegex != null && !positiveRegex.IsMatch(x.ToString())) continue;
+                        if (negativeRegex != null && negativeRegex.IsMatch(x.ToString())) continue;
                         await Paused.WaitAsync(cancellationToken);
                         Paused.Release();
                         yield return new

@@ -52,15 +52,7 @@ namespace SyslogWeb.Models
 
         public override string ToString()
         {
-            return String.Format("{0} {1} {2} {3} {4} {5} {6} {7}",
-                                     Date.ToLocalTime(),
-                                     Host,
-                                     Facility,
-                                     Severity,
-                                     Pid,
-                                     Program,
-                                     Seq,
-                                     Text);
+            return $"{Date.ToLocalTime()} {Host} {Facility} {Severity} {Pid} {Program} {Seq} {Text}";
         }
     }
 }
