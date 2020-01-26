@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Microsoft.Extensions.Options;
 using MongoDB.Bson;
+using MongoDB.Bson.IO;
 using MongoDB.Driver;
 using MongoDB.Driver.Core.Clusters;
 using SyslogWeb.Models;
@@ -19,7 +20,9 @@ namespace SyslogWeb
         public MongoDBConfig(MongoDBOptions options)
         {
             _options = options;
-            Client = new MongoClient(_options.ConnectionString);
+            var settings = MongoClientSettings.FromConnectionString(_options.ConnectionString);
+            settings.ReadEncoding = Utf8Encodings.Lenient;
+            Client = new MongoClient(settings);
             CreateIndices();
         }
 

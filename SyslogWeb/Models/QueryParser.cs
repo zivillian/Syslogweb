@@ -29,7 +29,7 @@ namespace SyslogWeb.Models
 
         public IList<SyslogFacility> Facilities { get; private set; }
 
-        public FilterDefinition<SyslogEntry> Parse(string search, DateTime? maxdate = null)
+        public FilterDefinition<SyslogEntry> Parse(string search, DateTimeOffset? maxdate = null)
         {
             QueryString = String.Empty;
             if (String.IsNullOrEmpty(search)) return ParseDate(maxdate, FilterDefinition<SyslogEntry>.Empty);
@@ -105,11 +105,11 @@ namespace SyslogWeb.Models
             return ParseDate(maxdate, result);
         }
 
-        private FilterDefinition<SyslogEntry> ParseDate(DateTime? maxdate, FilterDefinition<SyslogEntry> result)
+        private FilterDefinition<SyslogEntry> ParseDate(DateTimeOffset? maxdate, FilterDefinition<SyslogEntry> result)
         {
             if (maxdate.HasValue)
             {
-                result = result.And(Builders<SyslogEntry>.Filter.Lte(x => x.Date, new DateTimeOffset(maxdate.Value, DateTimeOffset.Now.Offset)));
+                result = result.And(Builders<SyslogEntry>.Filter.Lte(x => x.Date, maxdate.Value));
             }
             return result;
         }

@@ -93,7 +93,7 @@ namespace SyslogWeb
                 case "ntp":
                     return SyslogFacility.ntp;
                 default:
-                    throw new NotSupportedException(value);
+                    return SyslogFacility.Unknown;
             }
         }
 
