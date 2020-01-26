@@ -36,19 +36,12 @@ $('#severityform input[type=checkbox]').change(function () {
     $('#searchform').data('changed', true);
 });
 
-//$('.input-group.date').datetimepicker({ useCurrent: false, language: 'de' })
-//    .on('dp.hide', function() {
-//        if ($('#searchform').data('changed'))
-//            $('#searchform').submit();
-//    }).on('dp.change', function () {
-//        $('#searchform').data('changed', true);
-//    });
-
 function StartWebsocket() {
     var $form = $('#searchform');
     var id = $form.attr('data-id');
+    var url = $form.attr('data-ws');
     if (id === '000000000000000000000000') return;
-    var connection = new signalR.HubConnectionBuilder().withUrl("/log").build();
+    var connection = new signalR.HubConnectionBuilder().withUrl(url).build();
     var $table = $('table.table > tbody');
 
     $('#pause').on('click', function () {

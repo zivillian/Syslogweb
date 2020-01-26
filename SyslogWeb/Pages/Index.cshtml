@@ -7,6 +7,7 @@
     var sw = new Stopwatch();
     sw.Start();
     ViewData["Title"] = "SyslogWeb";
+    ViewData["PathBase"] = Request.PathBase.ToString();
 }
 @if (Html.IsDebug())
 {
@@ -49,7 +50,7 @@
     }}
 
 <h2>@ViewBag.Title</h2>
-<form method="GET" id="searchform" data-id="@Model.ObjectId" data-query="@Model.Query">
+<form method="GET" id="searchform" data-id="@Model.ObjectId" data-query="@Model.Query" data-ws="@(ViewBag.PathBase)/log">
     <div class="row">
         <div class="input-group col-md-9">
             <div class="input-group-prepend">
