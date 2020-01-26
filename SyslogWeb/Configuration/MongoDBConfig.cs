@@ -1,11 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using Microsoft.Extensions.Options;
-using MongoDB.Bson;
 using MongoDB.Bson.IO;
 using MongoDB.Driver;
-using MongoDB.Driver.Core.Clusters;
 using SyslogWeb.Models;
 
 namespace SyslogWeb
@@ -23,7 +22,6 @@ namespace SyslogWeb
             var settings = MongoClientSettings.FromConnectionString(_options.ConnectionString);
             settings.ReadEncoding = Utf8Encodings.Lenient;
             Client = new MongoClient(settings);
-            CreateIndices();
         }
 
         public MongoClient Client { get; private set; }
@@ -43,16 +41,13 @@ namespace SyslogWeb
                 {"_fts__ftsx", new IndexKeysDefinitionBuilder<SyslogEntry>().Text(x=>x.Text).Text(x=>x.Program).Text(x=>x.Severity).Text(x=>x.Host).Text(x=>x.Facility)},
             };
 
-        private void CreateIndices()
+        public Task CreateIndicesAsync()
         {
             var existing = SyslogCollection.Indexes.List().ToEnumerable()
                 .Select(index => String.Join("_", index.Names.Select(x => x.ToLowerInvariant())))
                 .ToArray();
             var missing = _indices.Where(x => !existing.Contains(x.Key)).Select(x => x.Value).ToArray();
-            foreach (var index in missing)
-            {
-                SyslogCollection.Indexes.CreateOne(index);
-            }
+            return SyslogCollection.Indexes.CreateManyAsync(missing.Select(x => new CreateIndexModel<SyslogEntry>(x)));
         }
     }
 }
